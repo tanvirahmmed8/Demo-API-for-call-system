@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class TicketController extends Controller
 {
@@ -109,5 +111,105 @@ class TicketController extends Controller
             'message' => 'Ticket status updated successfully',
             'ticket' => $ticket
         ]);
+    }
+
+    /**
+     * Display a listing of tickets
+     *
+     * @return \Illuminate\View\View
+     */
+    public function index(): View
+    {
+        $tickets = Ticket::with('user')->get();
+        return view('tickets.index', compact('tickets'));
+    }
+
+    /**
+     * Show the form for creating a new ticket
+     *
+     * @return \Illuminate\View\View
+     */
+    public function create(): View
+    {
+        $users = User::all();
+        return view('tickets.create', compact('users'));
+    }
+
+    /**
+     * Store a newly created ticket in storage
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        // Generate a unique ticket number
+        $ticketNumber = 'TKT-' . strtoupper(Str::random(8));
+
+        $ticket = Ticket::create([
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'user_id' => $validated['user_id'],
+            'ticket_number' => $ticketNumber,
+            'status' => 'open',
+        ]);
+
+        return redirect()->route('tickets.show', $ticket->id)
+                         ->with('success', 'Ticket created successfully');
+    }
+
+    /**
+     * Display the specified ticket
+     *
+     * @param  int  $id
+     * @return \Illuminate\View\View
+     */
+    public function show($id): View
+    {
+        $ticket = Ticket::with('user')->findOrFail($id);
+        return view('tickets.show', compact('ticket'));
+    }
+
+    /**
+     * Show the form for editing the specified ticket
+     *
+     * @param  int  $id
+     * @return \Illuminate\View\View
+     */
+    public function edit($id): View
+    {
+        $ticket = Ticket::findOrFail($id);
+        $users = User::all();
+        return view('tickets.edit', compact('ticket', 'users'));
+    }
+
+    /**
+     * Update the specified ticket in storage
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function update(Request $request, $id): RedirectResponse
+    {
+        $ticket = Ticket::findOrFail($id);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'user_id' => 'required|exists:users,id',
+            'status' => 'required|in:open,in_progress,resolved,closed',
+        ]);
+
+        $ticket->update($validated);
+
+        return redirect()->route('tickets.show', $ticket->id)
+                         ->with('success', 'Ticket updated successfully');
     }
 }

@@ -2,10 +2,17 @@
 
 @section('content')
 <div class="card">
-    <div class="card-header bg-primary text-white">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
         <h2>User List</h2>
+        <a href="{{ url('/users/create') }}" class="btn btn-light">Create New User</a>
     </div>
     <div class="card-body">
+        @if(session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
+
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -39,6 +46,7 @@
                     </td>
                     <td>
                         <a href="/users/{{ $user->id }}" class="btn btn-sm btn-info">View Tickets</a>
+                        <a href="/users/{{ $user->id }}/edit" class="btn btn-sm btn-primary">Edit</a>
                     </td>
                 </tr>
                 @endforeach

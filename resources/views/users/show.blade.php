@@ -4,8 +4,9 @@
 <div class="row">
     <div class="col-md-4">
         <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h3>User Details</h3>
+                <a href="/users/{{ $user->id }}/edit" class="btn btn-light">Edit User</a>
             </div>
             <div class="card-body">
                 <h4>{{ $user->name }}</h4>
@@ -31,8 +32,9 @@
 
     <div class="col-md-8">
         <div class="card">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h3>User Tickets</h3>
+                <a href="/tickets/create?user_id={{ $user->id }}" class="btn btn-light">Create Ticket</a>
             </div>
             <div class="card-body">
                 @if($user->tickets->count() > 0)
@@ -49,7 +51,7 @@
                             @foreach($user->tickets as $ticket)
                             <tr>
                                 <td>{{ $ticket->ticket_number }}</td>
-                                <td>{{ $ticket->title }}</td>
+                                <td><a href="/tickets/{{ $ticket->id }}">{{ $ticket->title }}</a></td>
                                 <td>
                                     <span class="badge bg-{{ $ticket->status == 'open' ? 'danger' : ($ticket->status == 'in_progress' ? 'warning' : ($ticket->status == 'resolved' ? 'info' : 'success')) }}">
                                         {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
