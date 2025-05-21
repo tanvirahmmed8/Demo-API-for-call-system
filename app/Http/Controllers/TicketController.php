@@ -42,21 +42,25 @@ class TicketController extends Controller
             'ticket' => $ticket
         ], 201);
     }
+
     public function createUserTicketPhn(Request $request): JsonResponse
     {
         $request->validate([
-            'phone' => 'required|exists:users,phone',
+            'phone' => 'required|string',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
         ]);
 
-        $user = User::where('phone', $request->phone)->firstOrFail();
+        // Normalize phone number
+        $normalizedPhone = preg_replace('/^00/', '+', $request->phone);
+
+        $user = User::where('phone_number', $normalizedPhone)->first();
 
         if (!$user) {
             return response()->json([
                 'message' => 'User not found!',
                 'status' => false
-            ], 201);
+            ], 404);
         }
 
         // Generate a unique ticket number
@@ -75,6 +79,7 @@ class TicketController extends Controller
             'ticket' => $ticket
         ], 201);
     }
+
 
     /**
      * Find a specific ticket by ID
