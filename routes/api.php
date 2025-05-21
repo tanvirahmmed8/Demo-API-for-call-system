@@ -26,6 +26,7 @@ Route::get('/user-phone/{phonenumber}', [UserController::class, 'findUserByPhone
 
 // Ticket routes
 Route::post('/user/ticket-create', [TicketController::class, 'createUserTicket']);
+Route::post('/user/ticket-create/phn', [TicketController::class, 'createUserTicketPhn']);
 Route::get('/user/ticket/{id}', [TicketController::class, 'findUserTicket']);
 Route::get('/user/last-ticket/{id}', [TicketController::class, 'findLastIssuedTicket']);
 Route::put('/ticket-status/{id}', [TicketController::class, 'updateTicketStatus']);

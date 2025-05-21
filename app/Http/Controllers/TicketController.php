@@ -42,6 +42,39 @@ class TicketController extends Controller
             'ticket' => $ticket
         ], 201);
     }
+    public function createUserTicketPhn(Request $request): JsonResponse
+    {
+        $request->validate([
+            'phone' => 'required|exists:users,phone',
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+        ]);
+
+        $user = User::where('phone', $request->phone)->firstOrFail();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found!',
+                'status' => false
+            ], 201);
+        }
+
+        // Generate a unique ticket number
+        $ticketNumber = 'TKT-' . strtoupper(Str::random(8));
+
+        $ticket = Ticket::create([
+            'user_id' => $user->id,
+            'title' => $request->title,
+            'description' => $request->description,
+            'ticket_number' => $ticketNumber,
+            'status' => 'open',
+        ]);
+
+        return response()->json([
+            'message' => 'Ticket created successfully',
+            'ticket' => $ticket
+        ], 201);
+    }
 
     /**
      * Find a specific ticket by ID
@@ -75,8 +108,8 @@ class TicketController extends Controller
         }
 
         $lastTicket = Ticket::where('user_id', $userId)
-                           ->latest()
-                           ->first();
+            ->latest()
+            ->first();
 
         if (!$lastTicket) {
             return response()->json(['message' => 'No tickets found for this user']);
@@ -161,7 +194,7 @@ class TicketController extends Controller
         ]);
 
         return redirect()->route('tickets.show', $ticket->id)
-                         ->with('success', 'Ticket created successfully');
+            ->with('success', 'Ticket created successfully');
     }
 
     /**
@@ -210,6 +243,6 @@ class TicketController extends Controller
         $ticket->update($validated);
 
         return redirect()->route('tickets.show', $ticket->id)
-                         ->with('success', 'Ticket updated successfully');
+            ->with('success', 'Ticket updated successfully');
     }
 }
