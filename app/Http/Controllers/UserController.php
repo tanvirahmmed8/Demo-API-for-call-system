@@ -34,7 +34,8 @@ class UserController extends Controller
      */
     public function findUserByPhoneNumber($phoneNumber): JsonResponse
     {
-        $user = User::where('phone_number', $phoneNumber)->first();
+        $normalizedPhone = preg_replace('/^00/', '+', $phoneNumber);
+        $user = User::where('phone_number', $normalizedPhone)->first();
 
         if (!$user) {
             return response()->json(['message' => 'User not found']);
@@ -107,7 +108,7 @@ class UserController extends Controller
         User::create($validated);
 
         return redirect()->route('users.index')
-                         ->with('success', 'User created successfully');
+            ->with('success', 'User created successfully');
     }
 
     /**
@@ -152,6 +153,6 @@ class UserController extends Controller
         $user->update($validated);
 
         return redirect()->route('users.show', $user->id)
-                         ->with('success', 'User updated successfully');
+            ->with('success', 'User updated successfully');
     }
 }
