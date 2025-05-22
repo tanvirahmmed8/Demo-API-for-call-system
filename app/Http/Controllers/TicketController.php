@@ -9,7 +9,9 @@ use Illuminate\View\View;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use libphonenumber\PhoneNumberUtil;
 use Illuminate\Http\RedirectResponse;
+use libphonenumber\PhoneNumberFormat;
 
 class TicketController extends Controller
 {
@@ -53,15 +55,29 @@ class TicketController extends Controller
         ]);
 
 
+        $phoneUtil = PhoneNumberUtil::getInstance();
+        // Assume default country for parsing local numbers (e.g., 'BD' for Bangladesh, or get from config/user IP)
+        $defaultCountry = 'BD';
+
+        $numberProto = $phoneUtil->parse($request->phone, $defaultCountry);
+
+        // Convert to international E.164 format: +8801731171023
+        $normalizedPhone = $phoneUtil->format($numberProto, PhoneNumberFormat::E164);
+
+
         $search = new Search;
         $search->raw_query = 'createUserTicketPhn';
+        $search->modified_query =  $normalizedPhone;
         $search->raw_response = json_encode($request->all());
         $search->save();
 
         // Normalize phone number
-        $normalizedPhone = preg_replace('/^00/', '+', $request->phone);
+        // $normalizedPhone = preg_replace('/^00/', '+', $request->phone);
+
+        // $user = User::where('phone_number', $normalizedPhone)->first();
 
         $user = User::where('phone_number', $normalizedPhone)->first();
+
 
         if (!$user) {
             return response()->json([
