@@ -23,7 +23,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // User routes
 Route::get('/user/{id}', [UserController::class, 'findUserById']);
 Route::get('/user-phone/{phonenumber}', [UserController::class, 'findUserByPhoneNumber']);
-Route::post('/user/create', [UserController::class, 'createUser']);
+Route::post('/user/create', [UserController::class, 'createOrUpdateUser']);
 
 // Ticket routes
 Route::post('/user/ticket-create', [TicketController::class, 'createUserTicket']);
