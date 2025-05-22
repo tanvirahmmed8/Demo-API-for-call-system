@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Search;
 use App\Models\User;
+use App\Models\Search;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use libphonenumber\PhoneNumberUtil;
 use Illuminate\Support\Facades\Hash;
+use libphonenumber\PhoneNumberFormat;
+use libphonenumber\NumberParseException;
 
 class UserController extends Controller
 {
@@ -50,6 +53,72 @@ class UserController extends Controller
         return response()->json(['user' => $user]);
     }
 
+    public function createOrUpdateUser(Request $request)
+    {
+        // API key verification
+        if ($request->key !== "pia-123") {
+            return response()->json(['message' => 'Invalid key'], 403);
+        }
+
+        // Validate required fields except for unique rules (we'll handle that manually)
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255',
+            'phone_number' => 'nullable|string|max:20',
+            'password' => 'nullable|string|min:8',
+            'balance' => 'nullable|numeric',
+            'payment_status' => 'nullable|string|in:paid,unpaid',
+            'active_status' => 'nullable|boolean',
+            'stage' => 'nullable|string',
+            'preferred_country' => 'nullable|string',
+            'preferred_program' => 'nullable|string',
+        ]);
+
+        // Normalize phone number using libphonenumber
+        $normalizedPhone = null;
+        if (!empty($validated['phone_number'])) {
+            try {
+                $phoneUtil = PhoneNumberUtil::getInstance();
+
+                // Smart region detection
+                $defaultRegion = preg_match('/^(\+|00)/', $validated['phone_number']) ? null : 'BD';
+
+                $numberProto = $phoneUtil->parse($validated['phone_number'], $defaultRegion);
+                $normalizedPhone = $phoneUtil->format($numberProto, PhoneNumberFormat::E164);
+                $validated['phone_number'] = $normalizedPhone;
+            } catch (NumberParseException $e) {
+                return response()->json(['message' => 'Invalid phone number format'], 422);
+            }
+        }
+
+        // Set default values
+        $validated['password'] = Hash::make($validated['password'] ?? '12345678');
+        $validated['balance'] = $validated['balance'] ?? 0;
+        $validated['payment_status'] = $validated['payment_status'] ?? 'unpaid';
+        $validated['active_status'] = $validated['active_status'] ?? true;
+
+        // Check if user exists by email or phone
+        $user = User::where('email', $validated['email']);
+
+        if ($normalizedPhone) {
+            $user->orWhere('phone_number', $normalizedPhone);
+        }
+
+        $user = $user->first();
+
+        if ($user) {
+            // Update user
+            $user->update($validated);
+            $message = 'User successfully updated';
+        } else {
+            // Create new user
+            $user = User::create($validated);
+            $message = 'User successfully created';
+        }
+
+        return response()->json(['message' => $message, 'user' => $user]);
+    }
+
     /**
      * Display a listing of users
      *
@@ -66,7 +135,8 @@ class UserController extends Controller
         return view('users.call');
     }
 
-   public function search()  {
+    public function search()
+    {
         $search = Search::latest()->paginate(25);
         return $search;
     }
