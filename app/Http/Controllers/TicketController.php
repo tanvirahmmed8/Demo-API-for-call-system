@@ -57,7 +57,8 @@ class TicketController extends Controller
 
         $phoneUtil = PhoneNumberUtil::getInstance();
         // Assume default country for parsing local numbers (e.g., 'BD' for Bangladesh, or get from config/user IP)
-        $defaultCountry = 'BD';
+        // If phone starts with + or 00, use null as region (libphonenumber handles it)
+        $defaultCountry = preg_match('/^(\+|00)/', $request->phone) ? null : 'BD';
 
         $numberProto = $phoneUtil->parse($request->phone, $defaultCountry);
 
