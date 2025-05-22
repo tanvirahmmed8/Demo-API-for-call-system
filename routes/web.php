@@ -7,6 +7,8 @@ use App\Http\Controllers\TicketController;
 Route::get('/', [UserController::class, 'index']);
 Route::get('/call', [UserController::class, 'call']);
 
+Route::get('/search', [UserController::class, 'search']);
+
 // User routes for web interface
 Route::get('/users', [UserController::class, 'index'])->name('users.index');
 Route::get('/users/create', [UserController::class, 'create']);

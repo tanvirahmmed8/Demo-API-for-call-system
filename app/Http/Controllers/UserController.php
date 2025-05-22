@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Search;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -34,8 +35,13 @@ class UserController extends Controller
      */
     public function findUserByPhoneNumber($phoneNumber): JsonResponse
     {
+        $search = new Search;
+        $search->raw_query = $phoneNumber;
         $normalizedPhone = preg_replace('/^00/', '+', $phoneNumber);
+        $search->modified_query = $normalizedPhone;
         $user = User::where('phone_number', $normalizedPhone)->first();
+        $search->output = json_encode($user);
+        $search->save();
 
         if (!$user) {
             return response()->json(['message' => 'User not found']);
@@ -58,6 +64,11 @@ class UserController extends Controller
     public function call()
     {
         return view('users.call');
+    }
+
+   public function search()  {
+        $search = Search::latest()->paginate(25);
+        return $search;
     }
 
     /**

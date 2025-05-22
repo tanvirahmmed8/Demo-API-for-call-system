@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Ticket;
 use App\Models\User;
+use App\Models\Search;
+use App\Models\Ticket;
+use Illuminate\View\View;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Str;
-use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
 class TicketController extends Controller
@@ -50,6 +51,12 @@ class TicketController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
         ]);
+
+
+        $search = new Search;
+        $search->raw_query = 'createUserTicketPhn';
+        $search->raw_response = json_encode($request->all());
+        $search->save();
 
         // Normalize phone number
         $normalizedPhone = preg_replace('/^00/', '+', $request->phone);
